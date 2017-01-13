@@ -1,0 +1,35 @@
+- Requisites:
+
+
+python3
+
+requests;
+urllib;
+furl;
+validators;
+
+
+[+] - Requirements:
+
+python3;
+requests;
+urllib;
+furl;
+validators;
+simpy3;
+
+selenium;
+phantomjs;
+
+libffi-dev
+mechanize
+python2 to run some tools
+
+PyExecJS -> to detect XSS;
+
+- tools:
+
+sqlmap;
+xsssniper;
+
+[+] - TODO:

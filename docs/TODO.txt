@@ -1,0 +1,51 @@
+To do list:
+
+06-01-2017:
+
+-- Control Server:
+   - Daemon that read URL target(Client and WEB);
+   - learning URL and active agents;
+
+-- Crawling produce tree of sites/scripts
+   - how many default nodes?
+
+-- bayesian network to dectect server/framework
+   - run nmap to detect operation system;
+
+-- Crawling search for backup files/interesting files;
+   - search for .bak, .swp, etc;
+   - search for phpinfo.php, server-status, etc.
+   - search for backdoors(webshells);
+   
+-- Get Policies of site:
+   - Check for policies(xss protection, clickjack, etc);
+   
+-- Using DFS(Deapth-First Search) or BFS(Breadth-First Search) to attack scripts;
+   - Whats is better?
+   - How use heuristics in that case?
+
+-- Vulnerability Scanner using AI resources;
+
+-- Multi-Agent Systems to run attacks(see apache activemq apollo for stomp);
+   -- RFI/LFI using Prolog;
+   -- SQLi using Specialist System;
+   -- Brute Force Login using intelligent wordlist, 
+   -- Break Captcha using Computer Vision(convolutions neural network)
+   -- XSS (Advanced Checking);
+   -- CSRF (Check token protections);
+  
+  -- Information Retrieve;
+
+ -- Inteligent Agents for frmameworks checks:
+   -- SharePoint;
+   -- Wordpress;
+   -- Joomla;
+   -- Liferay;
+   -- Lotus Domino;
+   -- Jboss;
+   -- Apaches Frameworks;
+   -- Etc;
+
+
+
+  
