@@ -8,8 +8,15 @@
 '''
 
 __author__ = 'mbforbes'
+'''
+Original Source:
 
-# XML parsing
+https://github.com/mbforbes/py-pomdp
+
+'''
+
+# XML parsing - problems with python 3.
+#install lxml
 #from elementtree.ElementTree import *
 from xml.etree.ElementTree import *
 

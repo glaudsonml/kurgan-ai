@@ -1,5 +1,5 @@
 '''
-Agent Target Actions.
+Spider Agent Actions.
 '''
 
 import sys,os
@@ -26,18 +26,45 @@ import libs.Utils as utl
 import libs.Target as target
 import config as cf
 
-AGENT_NAME="AgentTarget"
-AGENT_ID="2"
+import libs.Spider as spider
+
+AGENT_NAME="AgentSpider"
+AGENT_ID="5"
 ALL_AGENTS = "All"
 
 urlTarget = ''
 startTime = time.time()
 
-class TargetAction():
+class SpiderAction():
     mAgent = ''
     available_agents = []
     msg_id=[]
     baseUrlTarget = ''
+    content = ''
+    is_running = False
+    total_links = 0
+    links = []
+    urlTarget = ''
+    agent_can_run = True
+    
+    
+    def set_agent_can_run(self, val):
+        self.agent_can_run = val
+    def get_agent_can_run(self):
+        return self.agent_can_run
+    
+    def set_total_links(self, val):
+        self.total_links = val
+    def get_total_links(self):
+        return self.total_links
+    
+    def add_links(self, val):
+        self.links.append(val)
+    def get_links(self):
+        return self.links
+    def zera_links(self):
+        for i in self.links:
+            del i
     
     def set_mAgent(self, val):
         self.mAgent = val
@@ -46,7 +73,11 @@ class TargetAction():
         self.baseUrlTarget = val
     def get_baseUrlTarget(self):
         return self.baseUrlTarget
-            
+
+    def set_UrlTarget(self, val):
+        self.urlTarget = val
+    def get_UrlTarget(self):
+        return self.urlTarget
             
     def registerAgent(self):
         performative = "subscribe"
@@ -106,22 +137,96 @@ class TargetAction():
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
 
-    def sendHTTPHeaders(self, toAgent):
+    
+    def set_content(self, val):
+        self.content = val
+    def get_content(self):
+        return self.content
+
+
+    def run_spider_target(self, toAgent):
+        self.total_links = 0
+        self.links = []
+        self.zera_links()
+
+        print("Target is: " + self.baseUrlTarget)
+        sp = spider.Spider()    
+        if len(self.urlTarget) != 0:
+            sp.set_baseUrl(self.urlTarget)
+        else:
+            sp.set_baseUrl(self.baseUrlTarget)            
+            
+        self.links = sp.run()
+            
+        body = ''
+        total = 0
+        for line in self.links:
+            body += line + "\n"
+            total += 1
+            
+        self.total_links = total 
+          
         performative = "inform"
         reply_with = utl.id_generator()
-        conversation_id = utl.id_gen()    
-
-        content = ("Register HttpHeaders (= (http-headers) ("
-                   "User-Agent: Kurgan 0.1\n" 
-                   "Host: localhost\n" 
-                   "Cache: nocache\n" 
-                   "Cookie: abcdef\n" 
-                   "Content-type: text-html\n"  
-                   "))\n")              
-    
+        conversation_id = utl.id_gen()  
+        content = ("Response From spider (= (run-spider) (" + body +  "))\n")  
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
-        return ret
+        self.is_running = False
+
+        
+
+    def runSpider(self, toAgent):
+        if self.is_running is True:
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()    
+            body = "Spider in execution..."
+            content = ("Response from Spider (= (run-spider) ("
+                   + body + 
+                   "))\n")              
+    
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            return ret
+        else:
+            self.zera_links()
+            self.is_running = True
+            p = Process(target=self.run_spider_target(toAgent))
+            p.start()
+            
+
+        '''
+        pid = os.fork()
+        if pid == 0:
+            print("Target is: " + self.baseUrlTarget)
+            self.is_running = True
+            sp = spider.Spider()    
+            if len(self.urlTarget) != 0:
+                sp.set_baseUrl(self.urlTarget)
+            else:
+                sp.set_baseUrl(self.baseUrlTarget)            
+            self.links = sp.run()
+            
+            body = ''
+            total = 0
+            for line in self.links:
+                body += line + "\n"
+                total += 1
+            
+            self.total_links = total # fork is not update father process
+          
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()  
+            content = ("Response page-classifier (= (run-spider) (" + body +  "))\n")  
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            mypid = os.getpid(pid)
+            os.kill(mypid, signal.SIGTERM)
+        else:
+            return
+         '''   
 
     def agentStatus(self, toAgent):
         status = "UP"
@@ -161,17 +266,39 @@ class TargetAction():
         
         mAgent = Transport()
         self.set_mAgent(mAgent)
-           
-        if action_function == "http-headers":
-            print ("Sending headers to " , toAgent)
-            ret = self.sendHTTPHeaders(toAgent)
         
-        '''
+        if action_function == "set-run-spider" and performative=='inform':
+            if values == "True":
+                self.agent_can_run = True
+            else:
+                if values == "False":
+                    self.agent_can_run = False
+                else:
+                    self.agent_can_run = False #check this
+           
+        if action_function == "run-spider" and performative=='request':
+            if self.agent_can_run is True:
+                print ("Running Spider...")
+                ret = self.runSpider(toAgent)
+            else:
+                values = "False"
+                reply_to = reply_with
+                self.responseInfo('inform', toAgent, reply_to, "run-spider", values)
+
+        if action_function == "spider-get-total-links" and performative == "request":
+            print ("Sending Total of Links to: " , toAgent)
+            values = str(self.total_links)
+            reply_to = reply_with
+            self.responseInfo('inform', toAgent, reply_to, "spider-get-total-links", values)
+            
+        
+        
+        
+        
         if action_function == "url-target":
             print ("Sending url-target to " , toAgent)
             ret = self.registerUrl(urlTarget, toAgent)
-        '''
-            
+    
         if action_function == "agent-status":
             print ("Sending agent-up to " , toAgent)
             ret = self.agentStatus(toAgent)
@@ -182,11 +309,11 @@ class TargetAction():
                 values = self.get_baseUrlTarget()
                 reply_to = reply_with
                 self.responseInfo('inform', toAgent, reply_to, "base-url-target", values)
-            elif performative == 'inform':
-                self.baseUrlTarget = values  
-                retval = self.get_baseUrlTarget()
-                reply_to = reply_with
-                self.responseInfo('inform', ALL_AGENTS, reply_to, "base-url-target", retval)
+            elif performative == 'inform':  
+                self.baseUrlTarget = values
+
+
+
 
 
     def receive_pkg(self, mAgent):

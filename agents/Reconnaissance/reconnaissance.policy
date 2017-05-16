@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Policy version="0.1" type="value" model="kurgan/reconnaissance.pomdp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="policyx.xsd">
+<AlphaVector vectorLength="2" numObsValue="1" numVectors="22">
+<Vector action="0" obsValue="0">-20 -20 </Vector>
+<Vector action="0" obsValue="0">-7.70996 -20.0234 </Vector>
+<Vector action="0" obsValue="0">-6.83723 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83703 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83701 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83701 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83701 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83701 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83701 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83691 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-6.83525 -20.0789 </Vector>
+<Vector action="0" obsValue="0">-7.66313 -20.0244 </Vector>
+<Vector action="0" obsValue="0">-9.35215 -20.0016 </Vector>
+<Vector action="0" obsValue="0">-11.4019 -20.0002 </Vector>
+<Vector action="0" obsValue="0">-9.60033 -20.0006 </Vector>
+<Vector action="0" obsValue="0">-8.62992 -20.0022 </Vector>
+<Vector action="0" obsValue="0">-7.75187 -20.0116 </Vector>
+<Vector action="0" obsValue="0">-6.83785 -20.068 </Vector>
+<Vector action="0" obsValue="0">-3.6879 -35.1945 </Vector>
+<Vector action="1" obsValue="0">-2.47925 -112.479 </Vector>
+<Vector action="0" obsValue="0">-4.81319 -22.4969 </Vector>
+<Vector action="0" obsValue="0">-5.86104 -20.4107 </Vector>
+</AlphaVector> </Policy>

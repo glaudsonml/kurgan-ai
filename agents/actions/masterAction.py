@@ -27,6 +27,8 @@ from libs.Transport import Transport
 import libs.Utils as utl
 import config as cf
 
+from libs.POMDPBruteForce import POMDP_BruteForce
+
 
 AGENT_NAME="MasterAgent"
 AGENT_ID="1"
@@ -35,10 +37,20 @@ ALL_AGENTS = "All"
 
 class MasterAction():
     mAgent = ''
-    avaiable_agents = []
+    available_agents = []
     msg_id=[]
     baseUrlTarget =  ''
-     
+    attacks = {}
+    is_running_pomdp = False
+    pageDetected = ''
+    dataReturned = ''
+    
+    origAgent = ''
+    origReplyWith = ''
+    
+    def __init__(self):
+        self.attacks = {"Spider":True, "Crawling":False, "BruteForce":True}
+    
     def set_mAgent(self, val):
         self.mAgent = val
     
@@ -46,7 +58,17 @@ class MasterAction():
         self.baseUrlTarget = val
     def get_baseUrlTarget(self):
         return self.baseUrlTarget
-        
+    
+    def set_attacks(self, val):
+        self.attacks.update(val)
+    def get_attacks(self):
+        return self.attacks
+    
+    def set_dataReturned(self, val):
+        self.dataReturned = val
+    def get_dataReturned(self):
+        return self.dataReturned
+    
     def registerAgent(self):
         performative = "subscribe"
         toAgent = ALL_AGENTS
@@ -93,17 +115,95 @@ class MasterAction():
         msg = self.mAgent.set_response_to_agent(performative,AGENT_NAME, toAgent, content, reply_to, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
         return ret
-    
-    def add_avaiable_agent(self, agent_id):
-        self.avaiable_agents.append(agent_id)
-        
-    def del_avaiable_agent(self, agent_id):
-        for id in self.avaiable_agents:
-            if id == agent_id: 
-                self.avaiable_agents.remove(id)
 
-    def get_avaiable_agents(self):
-        return self.avaiable_agents
+    def informAgent(self,performative, toAgent,  reqfunction,values):
+        content = ("Inform Agent (= (" + reqfunction + ") (" + values + "))\n")
+        reply_with = utl.id_generator()           
+        conversation_id = utl.id_gen()   
+        
+        msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+        ret = self.mAgent.send_data_to_agent(msg)
+        return ret
+
+
+    
+    def add_available_agent(self, agent_id):
+        self.available_agents.append(agent_id)
+        
+    def del_available_agent(self, agent_id):
+        for id in self.available_agents:
+            if id == agent_id: 
+                self.available_agents.remove(id)
+
+    def get_available_agents(self):
+        return self.available_agents
+
+    def set_pageDetecter(self, val):
+        self.pageDetected = val
+    def get_pageDetected(self):
+        rec = self.receive_pkg(self.mAgent)
+        r = self.requestInfo('request', "AgentPageClassifier", "get-page-detected", "*")
+        return self.pageDetected
+
+    def check_page_returned(self, values):
+        if values == 'FormLogin':
+            self.pageDetected = values
+            print("Page returned is:" + self.pageDetected)
+
+            
+    def ret_pomdp(self):
+        pomdp = POMDP_BruteForce()
+        pomdp.run()
+        best_action = pomdp.get_best_action()
+        print("Best action: " + best_action)
+        
+        if best_action == 'run_brute_force' and self.pageDetected == 'FormLogin':
+            b = Process(target=self.requestInfo('request', "AgentBruteForce", "run-brute-force", "*"))
+            b.start()
+            while b.is_alive() is True:
+                time.sleep(1)
+        
+        #rec = self.receive_pkg(self.mAgent)
+                 
+    
+    def pomdp_final_response(self, toAgent, reply_to, content):
+        pomdp = POMDP_BruteForce()
+        pomdp.run()
+        best_action = pomdp.get_best_action()
+        body = "POMDP Response:\n\n" + "Best-Action: " + best_action + "\n"
+        body += "Data Returned: " + content 
+        self.responseInfo('inform', toAgent, reply_to, "run-pomdp", body)
+        self.is_running_pomdp = False
+
+                 
+    def run_pomdp_bf(self, toAgent, reply_with):
+        p = Process(target=self.requestInfo('request', "AgentPageClassifier", "run-page-classifier", "*"))
+        p.start()
+        while p.is_alive() is True:
+            time.sleep(1)
+        
+        rec = self.receive_pkg(self.mAgent)
+
+        
+
+
+    def run_pomdp(self, toAgent, reply_with_orig):
+        if self.is_running_pomdp is True:
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()    
+            body = "POMDP in execution..."
+            content = ("Response from MasterAgent (= (run-pomdp) (" + body + "))\n")              
+    
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            return ret
+        else:
+            self.is_running_pomdp = True
+            p = Process(target=self.run_pomdp_bf(toAgent, reply_with_orig))
+            p.start()
+            
+
 
     def parse_action(self, fm):
         performative = fm.get_performative()
@@ -163,24 +263,24 @@ class MasterAction():
         if action_function == "agent-name" and performative == "subscribe" and description == "Register Agent":
             print ("Register agent: " , toAgent)
             agent_name = toAgent
-            if agent_name not in self.avaiable_agents:
+            if agent_name not in self.available_agents:
                print ("Adding agent: " , agent_name)
-               self.add_avaiable_agent(agent_name)
+               self.add_available_agent(agent_name)
 
         if action_function == "agent-name" and performative == "subscribe" and description == "Deregister Agent":
             print ("Deregister agent: " , toAgent)
             agent_name = toAgent
-            if agent_name in self.avaiable_agents:
+            if agent_name in self.available_agents:
                print ("Removing agent: " , agent_name)
-               self.del_avaiable_agent(agent_name)
+               self.del_available_agent(agent_name)
 
                
-        if action_function == "avaiable-agents":
-            print ("Sending avaiable-agents to: " , toAgent)
-            all_agents = self.avaiable_agents
+        if action_function == "agents-available":
+            print ("Sending available-agents to: " , toAgent)
+            all_agents = self.available_agents
             values = " ".join(str(x) for x in all_agents)
             reply_to = reply_with
-            self.responseInfo('inform', toAgent, reply_to, "avaiable-agent", values)
+            self.responseInfo('inform', toAgent, reply_to, "available-agent", values)
         
         if action_function == "url-target":
             print ("Setting base-url-target to: " , values)
@@ -194,20 +294,102 @@ class MasterAction():
                 self.responseInfo('inform', toAgent, reply_to, "base-url-target", values)
             elif performative == 'inform':  
                 self.baseUrlTarget = values
-        
-        if action_function == "base-url-target" and performative=='request':
-            print ("Sending base-url-target to: " , values)
-            self.baseUrlTarget = values
-        
+                
+        if action_function == "set-run-spider":
+            if performative == 'request':
+                retval = ''
+                if self.attacks["Spider"] == True:
+                    retval = "True"
+                else:
+                    retval = "False"
+                reply_to = reply_with
+                self.responseInfo('inform', toAgent, reply_to, "set-run-spider", retval)
+            elif performative == 'inform':
+                if values == "True":
+                    dados = {'Spider':True}
+                    self.attacks.update(dados)
+                    reply_to = reply_with
+                    self.responseInfo('inform', 'AgentSpider', reply_to, "set-run-spider", "True") 
+                if values == "False":  
+                    dados = {'Spider':False}
+                    self.attacks.update(dados)
+                    reply_to = reply_with 
+                    self.responseInfo('inform', 'AgentSpider', reply_to, "set-run-spider", "False")
+            
+
+        if action_function == "set-run-brute-force":
+            if performative == 'request':
+                retval = ''
+                if self.attacks["BruteForce"] == True:
+                    retval = "True"
+                else:
+                    retval = "False"
+                reply_to = reply_with
+                self.responseInfo('inform', toAgent, reply_to, "set-run-brute-force", retval)
+            elif performative == 'inform':
+                if values == "True":
+                    dados = {'BruteForce':True}
+                    self.attacks.update(dados)
+                    reply_to = reply_with
+                    self.responseInfo('inform', 'AgentBruteForce', reply_to, "set-run-brute-force", "True") 
+                if values == "False":  
+                    dados = {'BruteForce':False}
+                    self.attacks.update(dados)
+                    reply_to = reply_with 
+                    self.responseInfo('inform', 'AgentBruteForce', reply_to, "set-run-brute-force", "False")
+
+
+        #TODO: handle this
+        #origAgent = ''
+        #origReplywith = ''
+
+        if action_function == "run-pomdp":
+            if performative == 'inform':
+                ret = self.run_pomdp(toAgent, reply_with)
+            if performative == 'request':
+                self.origAgent = toAgent
+                self.origReplyWith = reply_with
+                print("OrigAgent: " + self.origAgent)
+                print("OrigReplywith: " + self.origReplyWith)
+                ret = self.run_pomdp(toAgent, reply_with)
+
+        if action_function == "get-page-detected":
+            if performative == 'inform':
+                self.pageDetected = values
+                print("Page Detected is: " + self.pageDetected)
+                if self.is_running_pomdp is True:
+                    self.ret_pomdp()
+                    
+                
+
+        if action_function == "run-page-classifier":
+            if performative == 'inform':
+                self.requestInfo('request', "AgentPageClassifier", "get-page-detected", "*")
+                
+        if action_function == "run-brute-force":
+            if performative == 'inform':
+                self.dataReturned = values
+                #self.requestInfo('request', "AgentBruteForce", "brute-force-get-accounts", "*")
+                print("Accounts Returned: " + self.dataReturned)
+                if self.is_running_pomdp is True:
+                    reply_to = reply_with
+                    finalAgent = toAgent
+                    finalReply = reply_with
+                    print("FinalAgent: " + finalAgent)
+                    print("FinalReply: " + finalReply)
+                    self.pomdp_final_response(self.origAgent, self.origReplyWith, self.dataReturned) 
+#                    self.pomdp_final_response(toAgent, reply_with, self.dataReturned)
+                    
+
         
         #Error: loop?
         if action_function == "agent-status":
             match = re.search("AgentName:.(\w+)", values, re.DOTALL|re.MULTILINE)
             if match:
                 agent_name = match.group(1).lstrip()
-                if agent_name not in self.avaiable_agents:
+                if agent_name not in self.available_agents:
                     print ("Adding agent: " , agent_name)
-                    self.add_avaiable_agent(agent_name)
+                    self.add_available_agent(agent_name)
 
 
 

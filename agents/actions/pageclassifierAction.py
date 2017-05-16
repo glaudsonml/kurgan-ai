@@ -1,5 +1,5 @@
 '''
-Agent Target Actions.
+Page Classifier Actions.
 '''
 
 import sys,os
@@ -26,19 +26,28 @@ import libs.Utils as utl
 import libs.Target as target
 import config as cf
 
-AGENT_NAME="AgentTarget"
-AGENT_ID="2"
+from libs.PageClassifier import PageClassifier
+
+AGENT_NAME="AgentPageClassifier"
+AGENT_ID="4"
 ALL_AGENTS = "All"
 
-urlTarget = ''
+
 startTime = time.time()
 
-class TargetAction():
+class PageClassifierAction():
     mAgent = ''
     available_agents = []
     msg_id=[]
     baseUrlTarget = ''
+    content = ''
+    urlTarget = '' 
+    pageDetected = ''
+    is_running_pc = False
     
+    def __init__(self):
+        self.urlTarget = ''
+        
     def set_mAgent(self, val):
         self.mAgent = val
 
@@ -46,7 +55,18 @@ class TargetAction():
         self.baseUrlTarget = val
     def get_baseUrlTarget(self):
         return self.baseUrlTarget
-            
+
+    def set_UrlTarget(self, val):
+        self.urlTarget = val
+    def get_UrlTarget(self):
+        return self.urlTarget
+
+    def set_PageDetect(self, val):
+        self.pageDetected = val
+    def get_PageDetect(self):
+        return self.pageDetected
+
+
             
     def registerAgent(self):
         performative = "subscribe"
@@ -106,22 +126,65 @@ class TargetAction():
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
 
-    def sendHTTPHeaders(self, toAgent):
+    
+    def set_content(self, val):
+        self.content = val
+    def get_content(self):
+        return self.content
+
+    def run_pc(self, toAgent):
+        pc = PageClassifier()
+        
+        if len(self.urlTarget) != 0:
+            pc.set_url(self.urlTarget)
+        else:
+            pc.set_url(self.baseUrlTarget)
+            
+        body = 'Checking url: ' + pc.get_url() + '\n'
+        retauth = pc.checkIfAuthForm()
+        body = body + 'Page is Authentication Form Page: {0:.0f}%'.format(retauth) + '\n'
+        retstatic = pc.checkIfStatic()
+        
+        body = body + 'Page is Static HTML Page: {0:.0f}%'.format(retstatic) + "\n" 
+        retforgotten_password = pc.checkIfForgottenPassword()
+        body = body + 'Page is Forgotten Password Page: {0:.0f}%'.format(retforgotten_password) + "\n"
+        
+        if (retauth > retstatic) and (retauth > retforgotten_password):
+            self.pageDetected = "FormLogin"
+        if (retauth < retstatic) and (retstatic > retforgotten_password):
+            self.pageDetected = "Static"
+        if (retauth < retforgotten_password) and (retstatic < retforgotten_password):
+            self.pageDetected = "FormReset" 
+        
         performative = "inform"
         reply_with = utl.id_generator()
         conversation_id = utl.id_gen()    
 
-        content = ("Register HttpHeaders (= (http-headers) ("
-                   "User-Agent: Kurgan 0.1\n" 
-                   "Host: localhost\n" 
-                   "Cache: nocache\n" 
-                   "Cookie: abcdef\n" 
-                   "Content-type: text-html\n"  
-                   "))\n")              
+        uptime = time.time() - startTime
+        content = ("Response page-classifier (= (run-page-classifier) (" + body + "))\n")              
     
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
+        self.is_running_pc = False
         return ret
+
+    def run_pageClassifier(self, toAgent):
+        if self.is_running_pc is True:
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()    
+            body = "Page Classifier in execution..."
+            content = ("Response from PageClassifier (= (run-page-classifier) (" + body + "))\n")              
+    
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            return ret
+        else:
+            self.is_running_pc = True
+            p = Process(target=self.run_pc(toAgent))
+            p.start()
+            
+        
 
     def agentStatus(self, toAgent):
         status = "UP"
@@ -162,16 +225,28 @@ class TargetAction():
         mAgent = Transport()
         self.set_mAgent(mAgent)
            
-        if action_function == "http-headers":
-            print ("Sending headers to " , toAgent)
-            ret = self.sendHTTPHeaders(toAgent)
+        if action_function == "run-page-classifier" and performative=='request':
+            ret = self.run_pageClassifier(toAgent)
         
+        if action_function == "run-page-classifier" and performative=='inform':
+            ret = self.run_pageClassifier(toAgent)
+        '''
+        if action_function == "run-page-classifier" and performative=='inform':
+            if values == "True":
+                print ("Running Page Classifier in " , values)
+                ret = self.XXXXrunSpider(toAgent)
+            else:
+                print ("Value to run spider " , values)
         '''
         if action_function == "url-target":
-            print ("Sending url-target to " , toAgent)
-            ret = self.registerUrl(urlTarget, toAgent)
-        '''
-            
+            if performative == 'request':
+                values = self.get_UrlTarget()
+                reply_to = reply_with
+                self.responseInfo('inform', toAgent, reply_to, "url-target", values)
+            elif performative == 'inform':  
+                self.urlTarget = values
+                
+    
         if action_function == "agent-status":
             print ("Sending agent-up to " , toAgent)
             ret = self.agentStatus(toAgent)
@@ -182,11 +257,18 @@ class TargetAction():
                 values = self.get_baseUrlTarget()
                 reply_to = reply_with
                 self.responseInfo('inform', toAgent, reply_to, "base-url-target", values)
-            elif performative == 'inform':
-                self.baseUrlTarget = values  
-                retval = self.get_baseUrlTarget()
+            elif performative == 'inform':  
+                self.baseUrlTarget = values
+
+        if action_function == "get-page-detected":
+            if performative == 'request':
+                print ("Sending Page Detected to: " , toAgent)
+                values = self.get_PageDetect()
                 reply_to = reply_with
-                self.responseInfo('inform', ALL_AGENTS, reply_to, "base-url-target", retval)
+                self.responseInfo('inform', toAgent, reply_to, "get-page-detected", values)
+
+
+
 
 
     def receive_pkg(self, mAgent):
@@ -211,7 +293,8 @@ class TargetAction():
                                 self.parse_action(fm)
                             #break
                         else:
-                            print(rcv)
+                            continue
+                            #print(rcv)
                         #break
                         
                 else:

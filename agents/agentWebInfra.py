@@ -35,7 +35,7 @@ from libs.boot_agents import show_help
 #from libs.boot_agents import startAgent
 
 AGENT_NAME="AgentWebInfra"
-AGENT_ID="5"
+AGENT_ID="3"
 
 urlTarget = ''
 

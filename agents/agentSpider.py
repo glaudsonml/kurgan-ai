@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 '''
-Agent Target
+Spider Attack Agent
 '''
 
 import sys,os
+import validators
 import re, random
 from furl import *
 from urllib.parse import urlparse
 import time, signal
 from multiprocessing import Process
+import threading
 import stomp
 import re
 from daemonize import Daemonize
+from os.path import basename
 from os.path import basename
 
 current_dir = os.path.basename(os.getcwd())
@@ -19,40 +22,56 @@ if current_dir == "agents":
     sys.path.append('../')
 if current_dir == "Kurgan-Framework":
     sys.path.append('./')
-
+    
 from libs.STOMP import STOMP_Connector
 from libs.FIPA import FIPAMessage
 from libs.Transport import Transport
+
 import libs.Utils as utl
-import libs.Target as target
 import config as cf
 
-from actions.targetAction import TargetAction
+from actions.spiderAction import SpiderAction 
 
-AGENT_NAME="AgentTarget"
-AGENT_ID="2"
-ALL_AGENTS="All"
+AGENT_NAME="AgentSpider"
+AGENT_ID="5"
 
-urlTarget = ''
 
-def set_url_base(url):
-    mAction = TargetAction()
-    mAction.set_baseUrlTarget(url)
-    mAgent = Transport()
-    mAction.set_mAgent(mAgent)
-    ret = mAction.requestInfo('inform','Master-Agent','target-agent','ok')
-    mAction.receive_pkg(mAgent)
-    
-    
 def agent_status():
     mAgent = Transport()
-    mAction = TargetAction()
+    mAction = SpiderAction()
     mAction.set_mAgent(mAgent)
     ret = mAction.requestInfo('request','All','agent-status','*')
     mAction.receive_pkg(mAgent)
-    
+
+def get_infra():
+    mAgent = Transport()
+    mAction = SpiderAction()
+    mAction.set_mAgent(mAgent)
+    toAgent = "AgentWebInfra"
+    ret = mAction.requestInfo('request',toAgent,'agent-status','*')
+    mAction.receive_pkg(mAgent)
+
+def get_url_base():
+    mAgent = Transport()
+    mAction = SpiderAction()
+    toAgent = "MasterAgent"
+    mAction.set_mAgent(mAgent)
+    ret = mAction.requestInfo('request',toAgent,'base-url-target','*')
+    mAction.receive_pkg(mAgent)
+
+
+def run_spider():
+    mAgent = Transport()
+    mAction = SpiderAction()
+    toAgent = "MasterAgent"
+    mAction.set_mAgent(mAgent)
+    ret = mAction.requestInfo('request',toAgent,'run-spider','*')
+    mAction.receive_pkg(mAgent)
+
+
+
 def agent_quit():
-    mAction = TargetAction()
+    mAction = SpiderAction()
     mAgent = Transport()
     mAction.set_mAgent(mAgent)
     mAction.deregister()
@@ -64,12 +83,11 @@ def handler(signum, frame):
 
 
 def runAgent():
-    global urlTarget
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
     print("Loading " + AGENT_NAME + " ...\n")
     mAgent = Transport()
-    mAction = TargetAction()
+    mAction = SpiderAction()
     mAction.set_mAgent(mAgent)
     mAction.registerAgent()
     fm = FIPAMessage()
@@ -101,9 +119,9 @@ def runAgent():
     print("Available Agents: ", mAction.get_available_agents())
     
     mAgent = Transport()
-    mAction = TargetAction()
+    mAction = SpiderAction()
     mAction.set_mAgent(mAgent)
-    mAction.cfp("run-target", "*")
+    mAction.cfp("run-spider", "*")
     
     msg_id=[]
     while True:
@@ -124,10 +142,11 @@ def runAgent():
             else:
                 print(rcv)
 
-    p = Process(target=set_url_base(urlTarget))#dummy request for loop
+    p = Process(target= get_url_base())
     p.start()
-    p.join(3)    
-   
+    p.join(3)
+
+    
     
 
 def show_help():
@@ -136,7 +155,7 @@ def show_help():
     print("\nExample:\n")
     print("python3 " + __file__ + " background")
     exit(0) 
-    
+
 def run(background=False):
     if background == True:
         pid = os.fork()
@@ -146,12 +165,11 @@ def run(background=False):
             pidfile = '/tmp/%s.pid' % myname
             daemon = Daemonize(app=myname, pid=pidfile, action=runAgent)
             daemon.start()        
+            print("Agent Loaded.")
     else:
         runAgent()        
 
 def main(args):
-    global urlTarget
-    urlTarget = "http://www.kurgan.com.br/"
     if args[0] == "foreground":
         run(background=False)
     else:
@@ -167,4 +185,3 @@ if __name__ == '__main__':
         show_help()
     else:
         main(sys.argv[1:])
-    

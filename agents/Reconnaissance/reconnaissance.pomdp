@@ -1,0 +1,45 @@
+# RECONNAISSANCE - POMDP FILE.
+# FORMAT SPECIFICATIONS FROM:
+# http://www.pomdp.org/code/pomdp-file-spec.html 
+# To be used with py-pomdp.
+#
+# Glaudson Ocampos - <glaudson@vortex-ai.com.br>
+
+
+discount: 0.95
+values: reward
+states: response_with_information response_without_information
+actions: wait_cmd get_whois get_infos
+observations: has_whois has_infos
+
+T: wait_cmd
+identity
+
+T: get_whois
+uniform
+
+T: get_infos
+uniform
+
+O: wait_cmd
+0.85 0.15
+0.15 0.85
+
+O: get_whois
+uniform
+
+O: get_infos
+uniform
+
+
+
+R: wait_cmd : * : * : * -1
+
+R: get_whois : response_without_information : * : * -100
+
+R: get_whois : response_with_information : * : * 10
+
+R: get_infos : response_with_information : * : * 10
+
+R: get_infos : response_without_information : * : * -100
+

@@ -102,19 +102,19 @@ def runAgent():
                     print("agentID: ", agt_id)
                     agent_id.append(agt_id)
                     print(rcv)
-                    mAction.add_avaiable_agent(agt_id)
+                    mAction.add_available_agent(agt_id)
                     break
             else:
                 print(rcv)
     
     
-    print("Avaiable Agents: ", mAction.get_avaiable_agents())
+    print("Avaiable Agents: ", mAction.get_available_agents())
     
     
     mAgent = Transport()
     mAction = MasterAction()
     mAction.set_mAgent(mAgent)
-    mAction.cfp("http-headers", "*")
+    mAction.cfp("master-agent", "*")
     
     msg_id=[]
     while True:
@@ -142,33 +142,6 @@ def runAgent():
     p.start()
     p.join(3)
     
-    p2 = Process(target= get_infra())
-    p2.start()
-    p2.join(3)
-    
-    
-    #mAgent = Transport()
-    #mAction = MasterAction()
-    #mAction.set_mAgent(mAgent)
-    #ret = mAction.requestInfo('request','All','agent-status','*')
-    #mAction.receive_pkg(mAgent)
-    
-    #Collect informations
-    '''
-    toAgent = "AgentWebInfra"
-    ret = mAction.requestInfo('request',toAgent,'agent-status','*')
-    mAction.receive_pkg(mAgent)
-    
-    if toAgent in mAction.get_avaiable_agents:
-        mAgent = Transport()
-        mAction = MasterAction()
-        mAction.set_mAgent(mAgent)
-        reqfunction = "get-web-informations"
-        values = "*"
-        ret = mAction.cfp(reqfunction,values)
-        mAction.receive_pkg(mAgent)
-    '''
-    
     
 
 def show_help():
@@ -185,6 +158,7 @@ def run(background=False):
             p = basename(sys.argv[0])
             myname, file_extension = os.path.splitext(p)
             pidfile = '/tmp/%s.pid' % myname
+            #print("PIDFILE = " + pidfile)
             daemon = Daemonize(app=myname, pid=pidfile, action=runAgent)
             daemon.start()        
             print("Agent Loaded.")

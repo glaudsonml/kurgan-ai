@@ -6,6 +6,15 @@ PHASE1=True
 PHASE2=True
 PHASE3=True
 FOLLOW_URL=True
+SPIDER_GET_ALL_LINKS=False
+
+
+KURGAN_HOME="/home/glaudson/workspace/Kurgan-Framework/"
+
+BRUTEFORCE_LOGIN_FILE="wordlists/logins_simple.txt"
+BRUTEFORCE_PASSWORD_FILE="wordlists/passwords_simple.txt"
+
+
 CRAWLING_GET_ALL_LINKS=False
 
 
@@ -15,17 +24,17 @@ DB_WEBSERVERS="db/webservers.db"
 
 #Stomp Credentials
 STOMP_USERNAME = "admin"
-STOMP_PASSWORD = "password"
+STOMP_PASSWORD = "KuRg4nLives!"
 STOMP_TOPIC = "/topic/kurgan"
 
 #Agent list
 AGENTS_DIR="./agents/"
-AGENTS = ["masterAgent","agentBackup","agentTarget","agentWebInfra"]
+AGENTS_FILES = ["masterAgent","agentTarget","agentWebInfra","agentPageClassifier","agentSpider","agentBruteForce"]
 #AgentBackup Configurations
 
 
 #Apache Apollo Stomp
-APACHE_APOLLO="/usr/local/kurgan/apache-apollo-1.7.1/kurgan$ sudo bin/apollo-broker-service"
+APACHE_APOLLO_CMD="/infra/stomp/kurgan/bin/apollo-broker-service"
 
 #Binaries
 PHANTOMJS="/usr/bin/phantomjs"

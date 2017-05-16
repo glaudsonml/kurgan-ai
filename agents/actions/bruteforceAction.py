@@ -1,5 +1,5 @@
 '''
-Agent Target Actions.
+Brute Force Agent Actions.
 '''
 
 import sys,os
@@ -26,18 +26,41 @@ import libs.Utils as utl
 import libs.Target as target
 import config as cf
 
-AGENT_NAME="AgentTarget"
-AGENT_ID="2"
+import libs.BruteForceGeneric as bruteforce
+
+AGENT_NAME="AgentBruteForce"
+AGENT_ID="5"
 ALL_AGENTS = "All"
 
-urlTarget = ''
+
 startTime = time.time()
 
-class TargetAction():
+class BruteForceAction():
     mAgent = ''
     available_agents = []
     msg_id=[]
     baseUrlTarget = ''
+    content = ''
+    is_running = False
+    urlTarget = ''
+    agent_can_run = True
+    
+    accounts_discovered = []
+    
+    def set_agent_can_run(self, val):
+        self.agent_can_run = val
+    def get_agent_can_run(self):
+        return self.agent_can_run
+    
+    def set_accounts_discovered(self, val):
+        self.accounts_discovered.append(val)
+    def get_accounts_discovered(self):
+        return self.accounts_discovered
+    def zera_accounts_discovered(self):
+        for i in self.accounts_discovered:
+            del i
+    
+
     
     def set_mAgent(self, val):
         self.mAgent = val
@@ -46,7 +69,11 @@ class TargetAction():
         self.baseUrlTarget = val
     def get_baseUrlTarget(self):
         return self.baseUrlTarget
-            
+
+    def set_UrlTarget(self, val):
+        self.urlTarget = val
+    def get_UrlTarget(self):
+        return self.urlTarget
             
     def registerAgent(self):
         performative = "subscribe"
@@ -74,8 +101,7 @@ class TargetAction():
         content = ("Call For Propose (= (" + reqfunction + ") (" + values + "))\n")           
         reply_with = utl.id_generator()
         conversation_id = utl.id_gen()   
-    
-        #mAgent = MasterAgent()
+        
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
     
@@ -106,22 +132,51 @@ class TargetAction():
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
 
-    def sendHTTPHeaders(self, toAgent):
+    
+    def set_content(self, val):
+        self.content = val
+    def get_content(self):
+        return self.content
+
+
+    def run_bf_target(self, toAgent):
+        self.zera_accounts_discovered()
+        bf = bruteforce.BruteForceGeneric()
+        self.accounts_discovered = bf.runBF(self.baseUrlTarget)
+        self.accounts_discovered = bf.get_accounts_discovered()
+        
+        body = ''
+        for i in self.accounts_discovered:
+            body = body + i + "\n" 
+        
         performative = "inform"
         reply_with = utl.id_generator()
-        conversation_id = utl.id_gen()    
-
-        content = ("Register HttpHeaders (= (http-headers) ("
-                   "User-Agent: Kurgan 0.1\n" 
-                   "Host: localhost\n" 
-                   "Cache: nocache\n" 
-                   "Cookie: abcdef\n" 
-                   "Content-type: text-html\n"  
-                   "))\n")              
-    
+        conversation_id = utl.id_gen()  
+        content = ("Response brute force (= (run-brute-force) (" + body +  "))\n")  
         msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
-        return ret
+        self.is_running = False
+        
+
+    def runBruteForce(self, toAgent):
+        if self.is_running is True:
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()    
+            body = "Brute Force in execution..."
+            content = ("Response From Brute Force (= (run-brute-force) ("
+                   + body + 
+                   "))\n")              
+    
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            return ret
+        else:
+            self.is_running = True
+            p = Process(target=self.run_bf_target(toAgent))
+            p.start()
+            
+
 
     def agentStatus(self, toAgent):
         status = "UP"
@@ -161,17 +216,36 @@ class TargetAction():
         
         mAgent = Transport()
         self.set_mAgent(mAgent)
-           
-        if action_function == "http-headers":
-            print ("Sending headers to " , toAgent)
-            ret = self.sendHTTPHeaders(toAgent)
         
-        '''
+        if action_function == "set-run-brute-force" and performative=='inform':
+            if values == "True":
+                self.agent_can_run = True
+            else:
+                if values == "False":
+                    self.agent_can_run = False
+                else:
+                    self.agent_can_run = False #check this
+           
+        if action_function == "run-brute-force" and performative=='request':
+            if self.agent_can_run is True:
+                print ("Running Brute Force...")
+                ret = self.runBruteForce(toAgent)
+            else:
+                values = "False"
+                reply_to = reply_with
+                self.responseInfo('inform', toAgent, reply_to, "run-brute-force", values)
+
+        if action_function == "brute-force-get-accounts" and performative == "request":
+            print ("Sending Accounts Discovery to: " , toAgent)
+            values = str(self.accounts_discovered)
+            reply_to = reply_with
+            self.responseInfo('inform', toAgent, reply_to, "brute-force-get-accounts", values)
+            
+        
         if action_function == "url-target":
             print ("Sending url-target to " , toAgent)
             ret = self.registerUrl(urlTarget, toAgent)
-        '''
-            
+    
         if action_function == "agent-status":
             print ("Sending agent-up to " , toAgent)
             ret = self.agentStatus(toAgent)
@@ -182,11 +256,11 @@ class TargetAction():
                 values = self.get_baseUrlTarget()
                 reply_to = reply_with
                 self.responseInfo('inform', toAgent, reply_to, "base-url-target", values)
-            elif performative == 'inform':
-                self.baseUrlTarget = values  
-                retval = self.get_baseUrlTarget()
-                reply_to = reply_with
-                self.responseInfo('inform', ALL_AGENTS, reply_to, "base-url-target", retval)
+            elif performative == 'inform':  
+                self.baseUrlTarget = values
+
+
+
 
 
     def receive_pkg(self, mAgent):
@@ -211,11 +285,13 @@ class TargetAction():
                                 self.parse_action(fm)
                             #break
                         else:
-                            print(rcv)
+                            continue
+                            #print(rcv)
                         #break
                         
                 else:
-                    print(rcv)
+                    continue
+                    #print(rcv)
                     break
 
 

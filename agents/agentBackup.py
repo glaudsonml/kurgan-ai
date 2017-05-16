@@ -30,7 +30,7 @@ from libs.FIPA import FIPAMessage
 import config as cf
 
 AGENT_NAME="AgentBackup"
-AGENT_ID="2"
+AGENT_ID="20"
 
 conn = ''
 

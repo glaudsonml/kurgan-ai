@@ -6,7 +6,7 @@ Kurgan MultiAgent Framework
 
 FIPA-ACL for communicaton between agents.
 
-Author: Glaudson Ocampos - <glaudson@vortex-ai.com.br>
+Author: Glaudson Ocampos - <glaudson.ml@gmail.com>
 Created in 09th August, 2016.
 
 '''
@@ -233,16 +233,16 @@ class FIPAMessage(object):
             match2 = re.search("^\w+(.?)(\w+)?",field)
             if match2:
                 description = match2.group(0)
-                print("Description: ", description)
+                #print("Description: ", description)
   
         match = re.search("\(=(.)\([a-z-]+\)(.)\(.*\)", content, re.DOTALL|re.MULTILINE)
         if match:
             field = match.group(0).lstrip()
-            print("Field: ", field)
+            #print("Field: ", field)
             match2 = re.search("\(([a-z0-9-]+)\)",field)
             if match2:
                 action_function = match2.group(1).lstrip()
-                print("Action function: ", action_function)
+                #print("Action function: ", action_function)
             match4 = re.search(".*\((.*)\)\)",field, re.DOTALL|re.MULTILINE)
             if match4:
                 values = match4.group(1)  
@@ -264,22 +264,22 @@ class FIPAMessage(object):
             match = re.search(":sender(.\w+)", line)
             if match:
                 sender = match.group(1).lstrip()
-                print("Sender: ", sender)
+                #print("Sender: ", sender)
                 self.sender = sender
             match = re.search(":receiver(.\w+)", line)
             if match:
                 receiver = match.group(1).lstrip()
                 self.receiver = receiver
-                print("Receiver: ", receiver)
+                #print("Receiver: ", receiver)
             match = re.search(":reply-with(.\w+)", line)
             if match:
                 repwith = match.group(1).lstrip()
-                print("Reply-with: ", repwith)
+                #print("Reply-with: ", repwith)
                 self.reply_with = repwith
             match = re.search(":conversation-id(.\w+)", line)
             if match:
                 convid = match.group(1).lstrip()
-                print("Convertation-id: ", convid)
+                #print("Convertation-id: ", convid)
                 self.conversation_id = convid
 
         f = io.StringIO(pkg)

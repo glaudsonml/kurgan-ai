@@ -2,6 +2,7 @@
 Attack Class
 '''
 
+
 class Attack(object):
     attacking=True
     sqli=False
@@ -10,6 +11,7 @@ class Attack(object):
     rfi=False
     lfi=False
     bf=False
+    spider=False
     
     
     def set_attacking(self, val):
@@ -46,3 +48,9 @@ class Attack(object):
         self.bf = val
     def get_bf(self):
         return self.bf
+    
+    def set_spider(self, val):
+        self.spider = val
+    def get_spider(self):
+        return self.spider
+    

@@ -1,0 +1,40 @@
+# BRUTE FORCE - POMDP FILE.
+# FORMAT SPECIFICATIONS FROM:
+# http://www.pomdp.org/code/pomdp-file-spec.html 
+# To be used with py-pomdp.
+#
+# Glaudson Ocampos - <glaudson@vortex-ai.com.br>
+
+discount: 0.95
+values: reward
+states: vulnerable not_vulnerable
+actions: page_classifier run_brute_force run_spider
+observations: vulnerable_brute_force not_vulnerable_brute_force
+
+T: page_classifier
+identity
+
+T: run_brute_force
+uniform
+
+T: run_spider
+uniform
+
+O: page_classifier
+0.80 0.20
+0.20 0.80
+
+O: run_brute_force
+uniform
+
+O: run_spider
+uniform
+
+
+R: page_classifier : * : * : * -1
+R: run_spider : not_vulnerable : * : * -100
+R: run_spider : vulnerable : * : * 10
+R: run_brute_force : vulnerable : * : * 100
+R: run_brute_force : not_vulnerable : * : * -100
+
+

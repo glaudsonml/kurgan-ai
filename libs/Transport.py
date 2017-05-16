@@ -65,4 +65,7 @@ class Transport():
         self.cstomp.send_ack(message_id)
     
     def zera_buff(self):
-        self.cstomp.zera_buff()    
+        self.cstomp.zera_buff()
+    
+    def send_disconnect(self):
+        self.cstomp.disconnect()

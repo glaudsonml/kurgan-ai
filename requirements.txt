@@ -1,0 +1,10 @@
+BeautifulSoup
+saxutils
+requests
+urllib
+furl
+validators
+simpy3
+selenium
+phantomjs
+lxml

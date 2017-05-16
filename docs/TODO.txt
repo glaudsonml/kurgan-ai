@@ -9,7 +9,7 @@ To do list:
 -- Crawling produce tree of sites/scripts
    - how many default nodes?
 
--- bayesian network to dectect server/framework
+-- bayesian network to detect server/framework
    - run nmap to detect operation system;
 
 -- Crawling search for backup files/interesting files;
@@ -34,9 +34,9 @@ To do list:
    -- XSS (Advanced Checking);
    -- CSRF (Check token protections);
   
-  -- Information Retrieve;
+  -- Information Retrieval;
 
- -- Inteligent Agents for frmameworks checks:
+ -- Inteligent Agents for frameworks checks:
    -- SharePoint;
    -- Wordpress;
    -- Joomla;

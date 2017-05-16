@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-Agent Question - Send question to agents and show response.
+Agent Inform - Send inform to agents and show response.
 '''
 
 import sys,os
@@ -28,20 +28,33 @@ from libs.Transport import Transport
 import libs.Utils as utl
 import config as cf
 
-AGENT_NAME="AgentQuestion"
-AGENT_ID="5"
+AGENT_NAME="AgentInform"
+AGENT_ID="21"
+ALL_AGENTS = "All"
 
-class QuestionAction():
+class InformAction():
     mAgent = ''
     avaiable_agents = []
     msg_id=[]
+    values = ''
+    directive = ''
+    
+    def set_values(self, val):
+        self.values = val
+    def get_values(self):
+        return self.values
+    
+    def set_directive(self, val):
+        self.directive = val
+    def get_directive(self):
+        return self.directive
         
     def set_mAgent(self, val):
         self.mAgent = val
         
     def register(self):
         sender = AGENT_NAME
-        toAgent = "All"
+        toAgent = ALL_AGENTS
         content = ("Register Agent (= (agent-name) (" + AGENT_NAME + "))\n")              
         reply_with = utl.id_generator()
         conversation_id = utl.id_gen()   
@@ -51,17 +64,17 @@ class QuestionAction():
     def deregister(self):
         sender = AGENT_NAME
         performative = "subscribe"
-        toAgent = "All"
+        toAgent = ALL_AGENTS
         content = ("Deregister Agent (= (agent-name) (" + AGENT_NAME + "))\n")           
         reply_with = utl.id_generator()
         conversation_id = utl.id_gen()   
         msg = self.mAgent.set_data_to_agent(performative, sender, toAgent, content, reply_with, conversation_id)
         ret = self.mAgent.send_data_to_agent(msg)
 
-    def sendQuestion(self, toAgent, Question):
+    def sendInform(self, toAgent):
         sender = AGENT_NAME
-        performative = "request"
-        content = ("Request Information (= (" + Question + ") (*))\n")           
+        performative = "inform"
+        content = ("Sending Information (= (" + self.directive + ") (" + self.values + "))\n")           
         reply_with = utl.id_generator()
         conversation_id = utl.id_gen()   
         msg = self.mAgent.set_data_to_agent(performative, sender, toAgent, content, reply_with, conversation_id)
@@ -87,16 +100,15 @@ class QuestionAction():
                         self.msg_id.append(message_id)
                         mAgent.zera_buff()
                         receiver = fm.get_receiver()
-                        if receiver == AGENT_NAME:
+                        if receiver == "All" or receiver == AGENT_NAME:
                             self.parse_action(fm, mAgent)
                             #break
                         else:
-                            continue
-                            #print(rcv)
+                            print(rcv)
                         #break
                         
                 else:
-                    #print(rcv)
+                    print(rcv)
                     break
 
 
@@ -116,7 +128,7 @@ class QuestionAction():
 
 
 def agent_quit():
-    mAction = QuestionAction()
+    mAction = InformAction()
     mAgent = Transport()
     mAction.set_mAgent(mAgent)
     mAction.deregister()
@@ -126,11 +138,11 @@ def handler(signum, frame):
     print("Exiting of execution...", signum);
     agent_quit()
 
-def runAgent(toAgent, Question):
+def runAgent(toAgent, directive, values):
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
     print("Loading " + AGENT_NAME + " ...\n")
-    mAction = QuestionAction()
+    mAction = InformAction()
     mAgent = Transport()
     mAction.set_mAgent(mAgent)
     mAction.register()
@@ -158,39 +170,36 @@ def runAgent(toAgent, Question):
                     mAction.add_avaiable_agent(agt_id)
                     break
             else:
-                continue
-                #print(rcv)
+                print(rcv)
     
     
-    mAction = QuestionAction()
+    mAction = InformAction()
     mAgent = Transport()
     mAction.set_mAgent(mAgent)
-    ret = mAction.sendQuestion(toAgent, Question)
-    mAction.receive_pkg(mAgent)
-    mAgent.send_disconnect()
+    mAction.set_directive(directive)
+    mAction.set_values(values)
+    ret = mAction.sendInform(toAgent)
+    #mAction.receive_pkg(mAgent)
+    print("Check now with Question!\n")
     time.sleep(2)
-    
     agent_quit()
     
 
 def show_help():
-    print("Kurgan AI - MultiAgent Framework version ", cf.VERSION)
-    print("Usage: python3 " + __file__ + " <to_agent> <question>")
+    print("Kurgan MultiAgent Framework version ", cf.VERSION)
+    print("Usage: python3 " + __file__ + " <to_agent> <information>")
     print("\nExample:\n")
-    print("python3 " + __file__ + " MasterAgent agents-available")
-    print("python3 " + __file__ + " AgentTarget base-url-target")
-    print("python3 " + __file__ + " AgentPageClassifier run-page-classifier")
-    print("python3 " + __file__ + " AgentSpider run-spider")
-    print("python3 " + __file__ + " AgentBruteForce run-brute-force")
-    print("python3 " + __file__ + " MasterAgent run-pomdp")
-
+    print("python3 " + __file__ + " AgentTarget base-url-target http://www.kurgan.com.br/")
+    print("python3 " + __file__ + " MasterAgent set-run-spider True")
+    print("python3 " + __file__ + " MasterAgent set-run-brute-force False")
     exit(0) 
 
 
 def main(args):
     toAgent = args[0]
-    Question = args[1]
-    runAgent(toAgent, Question)
+    directive = args[1]
+    values = args[2]
+    runAgent(toAgent, directive, values)
     exit    
     
 if __name__ == '__main__':
