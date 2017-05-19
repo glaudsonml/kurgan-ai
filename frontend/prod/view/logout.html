@@ -1,0 +1,10 @@
+<?php
+        session_start();
+        if($SESSION['authenticated'] != 1){
+                session_destroy();
+                header("Location: ../index.php");
+                exit;
+        }
+
+	require_once(__DIR__ . '/' . '../controller/ctl_logout.php');
+?>

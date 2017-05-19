@@ -23,8 +23,8 @@ POLICY_FILE="libs/POMDP/BruteForce/bruteforce.policy"
 
 class POMDP_BruteForce(object):
     actions = ['page_classifier', 'run_brute_force', 'run_spider']
-    states = ['vulnerable', 'not_vulnerable']
-    observations = ['vulnerable_brute_force', 'not_vulnerable_brute_force', 'not_not_vulnerable_brute_force']
+    states = ['initial', 'vulnerable']
+    observations = ['form_login', 'not_form_login', 'not_form_login']
     pomdp = ''
     policy = ''
     
@@ -46,17 +46,15 @@ class POMDP_BruteForce(object):
         obs_idx = 0
         best_action_str = None
         while True:
-            print('Round', obs_idx + 1)
+            print('Stage(' + str(obs_idx) + ")")
             best_action_num, expected_reward = pomdp.get_best_action()
             best_action_str = pomdp.get_action_str(best_action_num)
             print('\t- action:         ', best_action_str)
             print('\t- expected reward:', expected_reward)
             if best_action_str != 'page_classifier':
-                # We have a 'terminal' action 
                 break
             else:
-                # The action is 'ask': Provide our next observation.
-                obs_str = observations[obs_idx]
+                obs_str = self.observations[obs_idx]
                 obs_idx += 1
                 print('\t- obs given:      ', obs_str)
                 obs_num = pomdp.get_obs_num(obs_str)
@@ -66,7 +64,7 @@ class POMDP_BruteForce(object):
 
 
         best_action_num, expected_reward = pomdp.get_best_action()
-        pomdp.update_belief(best_action_num, pomdp.get_obs_num('vulnerable_brute_force'))
+        pomdp.update_belief(best_action_num, pomdp.get_obs_num('form_login'))
         print('\t- belief:         ', np.round(pomdp.belief.flatten(), 3))
         self.best_action = best_action_str
         print("Finished POMDP.")

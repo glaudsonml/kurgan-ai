@@ -216,7 +216,7 @@ class MasterAction():
         mAgent = Transport()
         self.set_mAgent(mAgent)
         
-        #Dynamic programming
+        #Dynamic programming?
         '''
         actions = {'registerAgent':self.registerAgent(), 
                    'deRegisterAgent':self.registerAgent(), 
@@ -240,7 +240,8 @@ class MasterAction():
                    'runLDAPInjection':self.registerAgent(), 
                    'runXPathInjection':self.registerAgent(), 
                    'runFuzzer':self.registerAgent(), 
-                   'runInfoRetrieve':self.registerAgent()
+                   'runInfoRetrieve':self.registerAgent(),
+                   'runPOMDP':self.POMDP()
                    }
 
 

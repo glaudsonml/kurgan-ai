@@ -61,7 +61,14 @@ def get_web_infos():
         ret = mAction.cfp(reqfunction,values)
         mAction.receive_pkg(mAgent)
     
-
+def get_url_base():
+    mAgent = Transport()
+    mAction = MasterAction()
+    toAgent = "AgentTarget"
+    mAction.set_mAgent(mAgent)
+    ret = mAction.requestInfo('request',toAgent,'base-url-target','*')
+    mAction.receive_pkg(mAgent)
+    
 def agent_quit():
     mAction = MasterAction()
     mAgent = Transport()
@@ -138,7 +145,7 @@ def runAgent():
 
     
     
-    p = Process(target= agent_status())
+    p = Process(target= get_url_base())
     p.start()
     p.join(3)
     

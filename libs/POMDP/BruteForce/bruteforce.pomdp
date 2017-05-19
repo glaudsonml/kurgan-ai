@@ -7,9 +7,11 @@
 
 discount: 0.95
 values: reward
-states: vulnerable not_vulnerable
+states: initial vulnerable
 actions: page_classifier run_brute_force run_spider
-observations: vulnerable_brute_force not_vulnerable_brute_force
+observations: not_form_login form_login
+
+#start: first-state
 
 T: page_classifier
 identity
@@ -32,9 +34,9 @@ uniform
 
 
 R: page_classifier : * : * : * -1
-R: run_spider : not_vulnerable : * : * -100
+R: run_spider : initial : * : * -100
 R: run_spider : vulnerable : * : * 10
 R: run_brute_force : vulnerable : * : * 100
-R: run_brute_force : not_vulnerable : * : * -100
+R: run_brute_force : initial : * : * -100
 
 
