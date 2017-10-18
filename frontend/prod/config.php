@@ -4,7 +4,7 @@ namespace VortexAI\Kurgan;
 
 /* Database Config */
 $GLOBALS['db_user'] = "kurgan";
-$GLOBALS['db_pass'] = "SENHADOBANCO";
+$GLOBALS['db_pass'] = "29kurgan29";
 $GLOBALS['db_name'] = "kurgan";
 $GLOBALS['db_host'] = "127.0.0.1";
 $GLOBALS['db_port'] = 3306;

@@ -158,7 +158,7 @@ class MasterAction():
         print("Best action: " + best_action)
         
         if best_action == 'run_brute_force' and self.pageDetected == 'FormLogin':
-            b = Process(target=self.requestInfo('request', "AgentBruteForce", "run-brute-force", "*"))
+            b = Process(target=self.requestInfo('request', "AgentBruteForce", "run-brute-force-headless", "*"))
             b.start()
             while b.is_alive() is True:
                 time.sleep(1)
@@ -177,7 +177,7 @@ class MasterAction():
 
                  
     def run_pomdp_bf(self, toAgent, reply_with):
-        p = Process(target=self.requestInfo('request', "AgentPageClassifier", "run-page-classifier", "*"))
+        p = Process(target=self.requestInfo('request', "AgentPageClassifier", "run-page-classifier-headless", "*"))
         p.start()
         while p.is_alive() is True:
             time.sleep(1)
@@ -363,11 +363,11 @@ class MasterAction():
                     
                 
 
-        if action_function == "run-page-classifier":
+        if action_function == "run-page-classifier-headless":
             if performative == 'inform':
                 self.requestInfo('request', "AgentPageClassifier", "get-page-detected", "*")
                 
-        if action_function == "run-brute-force":
+        if action_function == "run-brute-force-headless":
             if performative == 'inform':
                 self.dataReturned = values
                 #self.requestInfo('request', "AgentBruteForce", "brute-force-get-accounts", "*")

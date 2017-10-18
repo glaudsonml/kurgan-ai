@@ -11,7 +11,6 @@ Last modified in Fev, 25th 2016.
 
 import sys, os
 import signal
-from furl import *
 import config as cf
 from subprocess import check_output, Popen
 from pathlib import Path
@@ -90,9 +89,9 @@ def show_help():
     print("Usage: python3 kurgan.py <options>\n")
     print("Option can be:\n")
     print("start infra\t\t\tStart Infrastructure to load agents and attack resources.")
-    print("start <URL>\t\t\tStart Agents to attack URL.")
+    print("start agents\t\t\tStart Agents to attack URL.")
     print("stop <agent_name>\t\tStop One Agent. or all agents(stop framework).")
-    print("stop all\t\t\tStop all agents(stop framework).")
+    print("stop agents\t\t\tStop all agents(stop framework).")
     print("status <agent_name>\t\tStatus of one agent.")
     print("status All\t\t\tStatus of all agents.")
     print("\nExamples:\n")

@@ -60,7 +60,7 @@ class BruteForceGeneric(object):
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': USER_AGENT, 'Accept': ACCEPT, 'Accept-Language': ACCEPT_LANGUAGE, 'Accept-Encoding': ACCEPT_ENCODING})
         self.session.headers.update({'DNT': 1, 'Upgrade-Insecure-Requests':1})
-        #self.proxies = {'http':'127.0.0.1:9090'}
+        #self.proxies = {'http':'192.168.25.223:8080'}
         
     
     def set_urlBase(self, val):

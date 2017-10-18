@@ -27,6 +27,7 @@ import libs.Target as target
 import config as cf
 
 from libs.PageClassifier import PageClassifier
+from libs.PageFormClassifier import PageFormClassifier
 
 AGENT_NAME="AgentPageClassifier"
 AGENT_ID="4"
@@ -184,6 +185,60 @@ class PageClassifierAction():
             p = Process(target=self.run_pc(toAgent))
             p.start()
             
+
+
+    def run_pc_headless(self, toAgent):
+        pc = PageFormClassifier()
+        
+        if len(self.urlTarget) != 0:
+            pc.set_url(self.urlTarget)
+        else:
+            pc.set_url(self.baseUrlTarget)
+            
+        body = 'Checking url: ' + pc.get_url() + '\n'
+        pc.get_page()
+        pc.run()
+        is_authform = pc.get_isAuthform()
+        if is_authform is True:
+            self.pageDetected = "FormLogin"
+            body = body + 'Page is Authentication Form Page:' + '{:.0%}'.format(float(pc.get_Accuracy())) + '\n'
+            print("It is Authentication Form Page: " +  '{:.0%}'.format(float(pc.get_Accuracy())))
+        else:
+            body = body + 'Page is not Authentication Form Page:' + '{:.0%}'.format(float(pc.get_Accuracy())) + '\n'
+            self.pageDetected = "NotFormLogin"
+            print("It is not Authentication Form Page: " + '{:.0%}'.format(float(pc.get_Accuracy())))
+
+        
+        performative = "inform"
+        reply_with = utl.id_generator()
+        conversation_id = utl.id_gen()    
+
+        uptime = time.time() - startTime
+        content = ("Response page-classifier-headless (= (run-page-classifier-headless) (" + body + "))\n")              
+    
+        msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+        ret = self.mAgent.send_data_to_agent(msg)
+        self.is_running_pc = False
+        return ret
+
+
+
+    def run_pageClassifierHeadless(self, toAgent):
+        if self.is_running_pc is True:
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()    
+            body = "Page Classifier Headless in execution..."
+            content = ("Response from PageClassifierHeadless (= (run-page-classifier-headless) (" + body + "))\n")              
+    
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            return ret
+        else:
+            self.is_running_pc = True
+            p = Process(target=self.run_pc_headless(toAgent))
+            p.start()
+
         
 
     def agentStatus(self, toAgent):
@@ -230,6 +285,14 @@ class PageClassifierAction():
         
         if action_function == "run-page-classifier" and performative=='inform':
             ret = self.run_pageClassifier(toAgent)
+        
+        if action_function == "run-page-classifier-headless" and performative=='request':
+            ret = self.run_pageClassifierHeadless(toAgent)
+        
+        if action_function == "run-page-classifier-headless" and performative=='inform':
+            ret = self.run_pageClassifierHeadless(toAgent)
+        
+        
         '''
         if action_function == "run-page-classifier" and performative=='inform':
             if values == "True":

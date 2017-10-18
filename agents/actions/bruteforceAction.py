@@ -27,6 +27,7 @@ import libs.Target as target
 import config as cf
 
 import libs.BruteForceGeneric as bruteforce
+import libs.BruteForceHeadless as bruteforceheadless
 
 AGENT_NAME="AgentBruteForce"
 AGENT_ID="5"
@@ -175,6 +176,47 @@ class BruteForceAction():
             self.is_running = True
             p = Process(target=self.run_bf_target(toAgent))
             p.start()
+
+
+    def run_bf_headless_target(self, toAgent):
+        self.zera_accounts_discovered()
+        bf = bruteforceheadless.BruteForceHeadless()
+        bf.set_urlTarget(self.baseUrlTarget)
+        self.accounts_discovered = bf.runBF()
+        self.accounts_discovered = bf.get_accounts_discovered()
+        
+        body = ''
+        for i in self.accounts_discovered:
+            body = body + i + "\n" 
+        
+        performative = "inform"
+        reply_with = utl.id_generator()
+        conversation_id = utl.id_gen()  
+        content = ("Response brute force Headless (= (run-brute-force-headless) (" + body +  "))\n")  
+        msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+        ret = self.mAgent.send_data_to_agent(msg)
+        self.is_running = False
+
+
+
+    def runBruteForceHeadless(self, toAgent):
+        if self.is_running is True:
+            performative = "inform"
+            reply_with = utl.id_generator()
+            conversation_id = utl.id_gen()    
+            body = "Brute Force Headless in execution..."
+            content = ("Response From Brute Force Headless(= (run-brute-force-headless) ("
+                   + body + 
+                   "))\n")              
+    
+            msg = self.mAgent.set_data_to_agent(performative,AGENT_NAME, toAgent, content, reply_with, conversation_id)
+            ret = self.mAgent.send_data_to_agent(msg)
+            return ret
+        else:
+            self.is_running = True
+            p = Process(target=self.run_bf_headless_target(toAgent))
+            p.start()
+
             
 
 
@@ -234,6 +276,17 @@ class BruteForceAction():
                 values = "False"
                 reply_to = reply_with
                 self.responseInfo('inform', toAgent, reply_to, "run-brute-force", values)
+
+        if action_function == "run-brute-force-headless" and performative=='request':
+            if self.agent_can_run is True:
+                print ("Running Brute Force Headless...")
+                ret = self.runBruteForceHeadless(toAgent)
+            else:
+                values = "False"
+                reply_to = reply_with
+                self.responseInfo('inform', toAgent, reply_to, "run-brute-force-headless", values)
+
+
 
         if action_function == "brute-force-get-accounts" and performative == "request":
             print ("Sending Accounts Discovery to: " , toAgent)

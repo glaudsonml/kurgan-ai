@@ -180,8 +180,10 @@ def show_help():
     print("python3 " + __file__ + " MasterAgent agents-available")
     print("python3 " + __file__ + " AgentTarget base-url-target")
     print("python3 " + __file__ + " AgentPageClassifier run-page-classifier")
+    print("python3 " + __file__ + " AgentPageClassifier run-page-classifier-headless")
     print("python3 " + __file__ + " AgentSpider run-spider")
     print("python3 " + __file__ + " AgentBruteForce run-brute-force")
+    print("python3 " + __file__ + " AgentBruteForce run-brute-force-headless")
     print("python3 " + __file__ + " MasterAgent run-pomdp")
 
     exit(0) 

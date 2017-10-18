@@ -1,0 +1,44 @@
+# BRUTE FORCE - POMDP FILE.
+# FORMAT SPECIFICATIONS FROM:
+# http://www.pomdp.org/code/pomdp-file-spec.html 
+# To be used with py-pomdp.
+#
+# Glaudson Ocampos - <glaudson@vortex-ai.com.br>
+
+discount: 0.95
+values: reward
+states: initial with_urls with_parameters
+actions: run_spider run_get_parameters run_attack
+observations: not_success success
+
+#start: first-state
+
+T: run_spider
+identity
+
+T: run_get_parameters
+uniform
+
+T: run_attack
+uniform
+
+O: run_spider
+0.80 0.20
+0.20 0.80
+
+O: run_get_parameters
+uniform
+
+O: run_attack
+uniform
+
+
+R: run_spider : * : * : * -1
+R: run_get_parameters : initial : * : * -100
+R: run_get_parameters : with_urls : * : * 10
+R: run_get_parameters : with_urls : * : * 10
+R: run_attack : initial : * : * -100
+R: run_attack : vulnerable : * : * 100
+
+
+

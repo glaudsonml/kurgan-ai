@@ -68,8 +68,7 @@ def run_bruteforce():
     ret = mAction.requestInfo('request',toAgent,'run-bruteforce','*')
     mAction.receive_pkg(mAgent)
 
-
-
+    
 def agent_quit():
     mAction = BruteForceAction()
     mAgent = Transport()

@@ -38,3 +38,4 @@ APACHE_APOLLO_CMD="/infra/stomp/kurgan/bin/apollo-broker-service"
 
 #Binaries
 PHANTOMJS="/usr/bin/phantomjs"
+CHROME_HEADLESS="/usr/bin/google-chrome"
